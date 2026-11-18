@@ -3,6 +3,8 @@ import { UserEntity } from '../user/entities/user.entities';
 import { extname } from 'path';
 import { SysController } from './sys.controller';
 import { SysService } from './sys.service';
+import { UserModule } from 'src/user/user.module';
+
 
 
 @Module({
