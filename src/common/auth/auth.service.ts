@@ -7,7 +7,7 @@ export class AuthService {
   @Inject(UserService)
   private userService: UserService;
 
-  async validateUser(payload: { id: number }): Promise<UserEntity> {
+  async validateUser(payload: { id: number }): Promise<UserEntity | null> {
     return await this.userService.findOneById(payload.id);
   }
 }

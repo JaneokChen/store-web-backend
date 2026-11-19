@@ -8,15 +8,16 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entities/user.entities';
 import { UserRoleEntity } from './entities/user-role.entities';
-import { RedisKeyPrefix } from '../common/enum/redis-key.enum';
+import { RedisKeyPrefix } from '@/common/enum/redis-key.enum';
 import { RedisService } from '../common/redis/redis.service';
 import { MailService } from '../common/mail/mail.service';
 
-import { getRedisKey } from '../common/utils/index';
+import { getRedisKey } from '@/common/utils';
 import { LoginUserDto } from '../sys/dto/login-user.dto';
 import { UserListDto } from './dto/user-list.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserType } from '@/common/enum/common.enum';
+import { ForgotUserDto } from '@/sys/dto/forgot-user.dto';
 
 @Injectable()
 export class UserService {
@@ -143,7 +144,7 @@ export class UserService {
     return this.jwtService.sign(payload);
   }
 
-  verifyToken(token: string): string {
+  verifyToken(token: string): string | null {
     if (!token) return null;
     const id = this.jwtService.verify(token.replace('Bearer', ''));
     return id;
@@ -181,16 +182,16 @@ export class UserService {
   }
 
   // 根据 ID 查找用户信息
-  async findOneById(id: number): Promise<UserEntity> {
+  async findOneById(id: number): Promise<UserEntity | null> {
     // 先从 Redis 中查询用户缓存
     const redisKey = getRedisKey(RedisKeyPrefix.USER_INFO, id);
     const result = (await this.redisService.hGetAll(redisKey)) || {};
-    let user = plainToClass(UserEntity, result, {
+    let user: UserEntity | null = plainToClass(UserEntity, result, {
       enableImplicitConversion: true,
     });
 
     // 缓存中没有再查库
-    if (!user.id) {
+    if (!user?.id) {
       user = await this.userRepository.findOneBy({ id });
 
       if (!user) return null;
@@ -198,7 +199,7 @@ export class UserService {
       // 设置缓存
       await this.redisService.hSet(redisKey, classToPlain(user));
     }
-    delete user.password;
+    Reflect.deleteProperty(user, 'password');
     return user;
   }
 
@@ -308,5 +309,162 @@ export class UserService {
     await this.redisService.hSet(redisKey, classToPlain(rest));
 
     return '更新成功';
+  }
+
+  async delete(id: number) {
+    // 判断用户是否存在
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.EXPECTATION_FAILED);
+    }
+
+    if (user.userType === UserType.ADMIN_USER) {
+      throw new HttpException('抱歉，您无权删除管理员', HttpStatus.FORBIDDEN);
+    }
+
+    const { affected } = await this.userRepository.delete({ id });
+
+    if (!affected) {
+      throw new HttpException(
+        '删除失败，请稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 删除角色关联表
+    const result = await this.userRoleRepository.delete({ userId: id });
+    if (!result) {
+      throw new HttpException(
+        '删除失败，请稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 删除 redis 缓存
+    const redisKey = getRedisKey(RedisKeyPrefix.USER_INFO, id);
+    await this.redisService.del(redisKey);
+
+    return '删除成功';
+  }
+
+  async updateFreezedStatus(id: number, freezed: number, currUserId: number) {
+    // 用户不能冻结自己
+    if (id === currUserId) {
+      throw new HttpException('你不能冻结自己', HttpStatus.EXPECTATION_FAILED);
+    }
+
+    // 判断用户是否存在
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new HttpException('用户不存在', HttpStatus.EXPECTATION_FAILED);
+    }
+
+    // 管理员是有最高权限的，不需要被冻结
+    if (user.userType === UserType.ADMIN_USER) {
+      throw new HttpException(
+        '抱歉，您无权修改管理员信息',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    // 更新数据
+    const { affected } = await this.userRepository.update({ id }, { freezed });
+    if (!affected) {
+      throw new HttpException(
+        `${freezed ? '冻结' : '解冻'}失败，请稍后重试`,
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 更新 redis 缓存
+    const redisKey = getRedisKey(RedisKeyPrefix.USER_INFO, id);
+    const { password, ...rest } = user;
+    await this.redisService.hSet(redisKey, classToPlain({ ...rest, freezed }));
+
+    return '操作成功';
+  }
+
+  /** 更新密码 */
+  async updatePassword(dto: ForgotUserDto) {
+    const { password, confirmPassword, code, username } = dto;
+    if (password !== confirmPassword) {
+      throw new HttpException(
+        '两次输入的密码不一样',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 判断用户是否存在
+    const exists = await this.userRepository.findOneBy({ username });
+    if (!exists) {
+      throw new HttpException(
+        '用户不存在或已删除',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    const { id, freezed } = exists;
+    if (freezed) {
+      throw new HttpException(
+        '用户已被冻结，清解冻后再修改',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 验证 Redis 中的 code 与用户输入的 code 是否一致
+    const cacheCode = await this.redisService.get(
+      getRedisKey(RedisKeyPrefix.PASSWORD_RESET, id),
+    );
+
+    if (cacheCode !== code) {
+      throw new HttpException(
+        '验证码错误或已过期',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 更新密码
+    const newPassword = await hash(password, exists.salt);
+    const { affected } = await this.userRepository.update(
+      {
+        id,
+      },
+      { password: newPassword },
+    );
+    if (!affected) {
+      throw new HttpException(
+        '修改失败，请稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 删除 Redis 缓存的验证码和用户信息
+    const codeRedisKey = getRedisKey(RedisKeyPrefix.PASSWORD_RESET, id);
+    this.redisService.del(codeRedisKey);
+
+    const userRedisKey = getRedisKey(RedisKeyPrefix.USER_INFO, id);
+    this.redisService.del(userRedisKey);
+
+    return '修改成功，请重新登录';
+  }
+
+  /** 发送修改密码验证码 */
+  async sendCode(email: string) {
+    // 判断用户是否存在
+    const user = await this.userRepository.findOneBy({ email });
+    if (!user) {
+      throw new HttpException(
+        '请输入用户注册时填写的邮箱地址',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 发送邮件
+    const { code } = await this.mailService.sendMail(email, '修改密码');
+
+    // 将验证码存入 Redis 缓存中，并设置过期时间
+    const redisKey = getRedisKey(RedisKeyPrefix.PASSWORD_RESET, user.id);
+    this.redisService.set(redisKey, code, 60 * 5);
+    return '验证码已发送至邮箱，请注意查收';
   }
 }
