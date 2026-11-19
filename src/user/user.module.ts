@@ -3,7 +3,7 @@ import { RedisModules } from '@/common/redis/redis.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entities';
 import { UserRoleEntity } from './entities/user-role.entities';
-import { PermissionEntity } from '@/permission/entities/permission.entity';
+import { PermissionEntity } from '@/common/entities/permission.entity';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from './user.service';
 import { MailService } from '@/common/mail/mail.service';
