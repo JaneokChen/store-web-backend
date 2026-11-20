@@ -46,7 +46,7 @@ export class SysController {
   }
 
   // 发送找回密码邮箱验证码
-  @Get('sendEmailForGot')
+  @Get('sendEmailForForgot')
   @AllowNoToken()
   sendEmailForForgot(@Query() dto: { email: string }) {
     return this.sysService.sendEmailForForgot(dto.email);

@@ -1,23 +1,51 @@
 # 接口和Content-Type不能换行
 @createdAt = {{$datetime iso8601}}
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJqbWluIiwidXNlclR5cGUiOjEsImVtYWlsIjoiMTI1NjUyNzUwNkBxcS5jb20iLCJmcmVlemVkIjowLCJjcmVhdGVUaW1lIjoiMjAyNC0wMy0zMFQwNzoyODozMS42ODdaIiwiaWF0IjoxNzExNzgzNzIwLCJleHAiOjE3MTIzODg1MjB9.zrWfAkowwc_mu6H0mFxxQ6jDy2RuH1b4j7G8qZpVO0Q
-
-
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoidGVzdDEiLCJ1c2VyVHlwZSI6IjEiLCJlbWFpbCI6ImphbmVva2NoZW5AMTYzLmNvbSIsImZyZWV6ZWQiOjAsImF2YXRhciI6IiIsImRlc2MiOiIiLCJjcmVhdGVUaW1lIjoiMjAyNi0xMS0yMFQxMTozNjoxOC44MDFaIiwiaWF0IjoxNzk1MTc1NzUzLCJleHAiOjE3OTU3ODA1NTN9.2yuCSsqstrBIbYangsWWSvkFhXYwlwP7_6tTcNXc4nQ
 # 发送注册邮箱验证码
 GET http://localhost:3332/api/sys/sendEmailForRegistry?email=janeokchen@163.com
 Authorization: {{token}}
 
 
 
+###
 # 注册用户
-POST http://localhost:3332/sys/registry
+POST http://localhost:3332/api/sys/registry
 Content-Type: application/json
 
 {
-  "username": "test",
-  "password": "test",
-  "confirmPassword": "test",
-  "email": "yc_micro_front@163.com",
-  "code": 384886
+  "username": "test1",
+  "password": "test1",
+  "confirmPassword": "test1",
+  "email": "janeokchen@163.com",
+  "code": 315758
 }
 
+
+###
+# 用户登录
+POST http://localhost:3332/api/sys/login
+Content-Type: application/json
+
+{
+  "username": "test1",
+  "password": "testa"
+}
+
+###
+# 发送找回密码验证码
+GET http://localhost:3332/api/sys/sendEmailForForgot?email=janeokchen@163.com
+
+
+###
+# 找回密码
+POST http://localhost:3332/api/sys/forgot
+Content-Type: application/json
+
+
+{
+  "username": "test1",
+  "password": "testa",
+  "confirmPassword": "testa",
+  "email": "janeokchen@163.com",
+  "code": 557855
+}

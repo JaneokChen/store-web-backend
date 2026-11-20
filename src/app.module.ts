@@ -25,7 +25,6 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
           username: config.get<string>('MYSQL_USER'),
           password: config.get<string>('MYSQL_PASSWORD'),
           database: config.get<string>('MYSQL_DATABASE'),
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
           charset: 'utf8mb4',
           autoLoadEntities: true,
           // 生产环境中禁止开启，应该使用数据迁移
