@@ -6,7 +6,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { pathToRegexp } from 'path-to-regexp';
+
 import { ALLOW_NO_TOKEN } from '../decorators/token.decorator';
+import { PermissionService } from '@/permission/permission.service';
+import { ALLOW_NO_PERMISSION } from '../decorators/permission.decorator';
+import { UserType } from '../enum/common.enum';
 
 @Injectable()
 export class RoleAuthGuard implements CanActivate {
@@ -49,9 +54,9 @@ export class RoleAuthGuard implements CanActivate {
       if (req.method.toUpperCase() === route.method.toUpperCase()) {
         // 比较当前请求url是否存在于用户接口权限集里
         const reqUrl = req.url.split('?')[0];
-        console.log('当前请求 URL:', reqUrl());
+        console.log('当前请求 URL:', reqUrl);
 
-        return !!pathToRegexp(route.url).exec(reqUrl);
+        return pathToRegexp(route.url).regexp.test(reqUrl);
       }
       return false;
     });

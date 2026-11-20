@@ -6,10 +6,13 @@ import {
   Param,
   Patch,
   Body,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserListDto } from './dto/user-list.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import type { AuthenticatedRequest } from '@/common/types/authenticated-request';
 
 @Controller('user')
 export class UserController {
@@ -22,7 +25,7 @@ export class UserController {
   }
 
   @Get('currentUser')
-  getCurrentUser(@Req() req) {
+  getCurrentUser(@Req() req: AuthenticatedRequest) {
     return this.userService.getCurrentUser(req.user);
   }
 
@@ -32,7 +35,10 @@ export class UserController {
   }
 
   @Patch('edit')
-  update(@Body() updateUserDto: UpdateUserDto, @Req() req) {
+  update(
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.userService.update(updateUserDto, req.user);
   }
 
@@ -42,12 +48,18 @@ export class UserController {
   }
 
   @Patch('/update/freezed')
-  updateFreezedStatus(@Body() dto: UpdateUserDto, @Req() req) {
-    return this.userService.updateFreezedStatus(
-      dto.id,
-      dto.freezed,
-      req.user.id,
-    );
+  updateFreezedStatus(
+    @Body() dto: UpdateUserDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const { freezed } = dto;
+    if (freezed === undefined) {
+      throw new HttpException(
+        '冻结状态不能为空',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+    return this.userService.updateFreezedStatus(dto.id, freezed, req.user.id);
   }
 
   @Get('sendMail')

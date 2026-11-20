@@ -9,7 +9,7 @@ import { UserService } from './user.service';
 import { MailService } from '@/common/mail/mail.service';
 import { UserController } from './user.controller';
 import { AuthModule } from '@/common/auth/auth.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -19,11 +19,12 @@ import { JwtModule } from '@nestjs/jwt';
 
     // 新增 jwt 模块
     JwtModule.registerAsync({
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         // 读取配置中的 secret
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expireIn: ConfigService.get<string>('JWT_EXPIRE_TIME'),
+          expiresIn:
+            configService.get<JwtSignOptions['expiresIn']>('JWT_EXPIRE_TIME'),
         },
       }),
       // 将 ConfigService 注入到工厂函数中

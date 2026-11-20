@@ -15,6 +15,7 @@ import { SysService } from './sys.service';
 import { AllowNoToken } from '../common/decorators/token.decorator';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { ForgotUserDto } from './dto/forgot-user.dto';
 
 @Controller('sys')
 export class SysController {
