@@ -416,14 +416,6 @@ export class UserService {
       getRedisKey(RedisKeyPrefix.PASSWORD_RESET, id),
     );
 
-    console.log(
-      '🚀 ~ UserService ~ updatePassword ~ cacheCode:',
-      cacheCode,
-      typeof cacheCode,
-      code,
-      typeof code,
-    );
-
     if (cacheCode !== `${code}`) {
       throw new HttpException(
         '验证码错误或已过期',
