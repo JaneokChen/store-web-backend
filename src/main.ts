@@ -17,10 +17,11 @@ async function bootstrap() {
   // 设置 api 访问前缀
   const prefix = config.get<string>('API_PREFIX') ?? '';
   app.setGlobalPrefix(prefix);
+
   app.useGlobalPipes(new ValidationPipe());
   console.log('APP_PORT', config.get<number>('APP_PORT'));
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(config.get<number>('APP_PORT') ?? 3000);
 }
 
 bootstrap();

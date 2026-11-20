@@ -1,0 +1,23 @@
+# 接口和Content-Type不能换行
+@createdAt = {{$datetime iso8601}}
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJqbWluIiwidXNlclR5cGUiOjEsImVtYWlsIjoiMTI1NjUyNzUwNkBxcS5jb20iLCJmcmVlemVkIjowLCJjcmVhdGVUaW1lIjoiMjAyNC0wMy0zMFQwNzoyODozMS42ODdaIiwiaWF0IjoxNzExNzgzNzIwLCJleHAiOjE3MTIzODg1MjB9.zrWfAkowwc_mu6H0mFxxQ6jDy2RuH1b4j7G8qZpVO0Q
+
+
+# 发送注册邮箱验证码
+GET http://localhost:3332/api/sys/sendEmailForRegistry?email=janeokchen@163.com
+Authorization: {{token}}
+
+
+
+# 注册用户
+POST http://localhost:3332/sys/registry
+Content-Type: application/json
+
+{
+  "username": "test",
+  "password": "test",
+  "confirmPassword": "test",
+  "email": "yc_micro_front@163.com",
+  "code": 384886
+}
+

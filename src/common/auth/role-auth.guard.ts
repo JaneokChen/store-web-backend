@@ -23,11 +23,11 @@ export class RoleAuthGuard implements CanActivate {
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     // 函数请求头配置 @AllowNoToken() 装饰器，则无需验证 token 权限
-    const allowNoToen = this.reflector.getAllAndOverride<boolean>(
+    const allowNoToken = this.reflector.getAllAndOverride<boolean>(
       ALLOW_NO_TOKEN,
       [ctx.getHandler(), ctx.getClass()],
     );
-    if (allowNoToen) return true;
+    if (allowNoToken) return true;
 
     // 函数请求头配置 @AllowNoPermission() 装饰器，则无需验证权限
     const allowNoPerm = this.reflector.getAllAndOverride<boolean>(
