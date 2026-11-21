@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -16,7 +17,7 @@ export class RoleEntity {
   @Column({ type: 'varchar', length: 255, comment: '角色描述' })
   desc: string;
 
-  @Column({ type: 'timestamp', comment: '创建时间' })
+  @CreateDateColumn({ type: 'timestamp', comment: '创建时间' })
   createTime: Date;
 
   @UpdateDateColumn({ type: 'timestamp', comment: '更新时间' })

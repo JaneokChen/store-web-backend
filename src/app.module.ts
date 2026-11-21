@@ -1,12 +1,15 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createObserveModule } from '@nestjs/observe';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { SysModule } from './sys/sys.module';
 import { PermissionModule } from './permission/permission.module';
+import { RoleModule } from './role/role.module';
+import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -14,7 +17,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
   imports: [
     UserModule,
     SysModule,
-
+    RoleModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -45,7 +48,14 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     PermissionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // TODO:
+    // 应用jwt登录态验证守卫
+    // 全局登录校验：未标注 @AllowNoToken() 的接口都要求携带有效 token，
+    // 认证通过后由 passport 将用户写入 req.user
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

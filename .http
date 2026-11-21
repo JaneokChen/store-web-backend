@@ -49,3 +49,28 @@ Content-Type: application/json
   "email": "janeokchen@163.com",
   "code": 557855
 }
+
+###
+// 创建角色
+POST http://localhost:3332/api/role/create
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "管理员",
+  "desc": "我是管理员",
+  "permissions": [1,2,3]
+}
+
+###
+// 删除角色
+GET  http://localhost:3332/api/role/delete/6
+Authorization: {{token}}
+
+
+###
+// 获取用户功能权限列表
+GET   http://localhost:3332/api/permission/list
+Authorization: {{token}}
+
+

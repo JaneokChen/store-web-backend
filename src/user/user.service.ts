@@ -146,8 +146,13 @@ export class UserService {
 
   verifyToken(token: string): string | null {
     if (!token) return null;
-    const id = this.jwtService.verify(token.replace('Bearer', ''));
-    return id;
+    try {
+      // 去掉 "Bearer " 前缀后再校验，token 无效或已过期时返回 null
+      const id = this.jwtService.verify(token.replace('Bearer', '').trim());
+      return id;
+    } catch {
+      return null;
+    }
   }
 
   async getUserList(dto: UserListDto) {

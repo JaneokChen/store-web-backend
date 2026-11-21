@@ -1,0 +1,169 @@
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { RoleEntity } from './entities/role.entity';
+import { RolePermissionEntity } from './entities/role-permission.entity';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { plainToClass } from 'class-transformer';
+import { RoleListDto } from './dto/role-list.dto';
+import { PermissionEntity } from '@/permission/entities/permission.entity';
+import { UpdateRoleDto } from './dto/update-role.dto';
+
+@Injectable()
+export class RoleService {
+  @InjectRepository(RoleEntity)
+  private roleRepository: Repository<RoleEntity>;
+
+  // 角色权限表
+  @InjectRepository(RolePermissionEntity)
+  private rolePermissionRepository: Repository<RolePermissionEntity>;
+
+  @Inject(DataSource)
+  private dataSource: DataSource;
+
+  /**
+   * 创建角色
+   */
+  async create(createRoleDto: CreateRoleDto) {
+    const role = await this.roleRepository.save(
+      plainToClass(RoleEntity, createRoleDto),
+    );
+    // 保存角色
+    if (!role) {
+      throw new HttpException(
+        '创建失败，请稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    const rolePermissions = createRoleDto.permissions.map((item) => {
+      return {
+        roleId: role.id,
+        permissionId: item,
+      };
+    });
+
+    // 保存角色权限表
+    const rolePermission =
+      await this.rolePermissionRepository.save(rolePermissions);
+    if (!rolePermission) {
+      throw new HttpException(
+        '创建失败，请稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+    return '创建成功';
+  }
+
+  /** 获取角色列表 */
+  async getRoleList(roleListDto: RoleListDto) {
+    const { page, pageSize } = roleListDto;
+    const skipCount = pageSize * (page - 1);
+    // TODO:
+    let queryBuilder = this.dataSource
+      .createQueryBuilder('store_role', 'r')
+      .leftJoin(RolePermissionEntity, 'rp', 'rp.roleId = r.id')
+      .leftJoin(PermissionEntity, 'p', 'p.id = rp.permissionId')
+      .select([
+        'r.*',
+        "JSON_ARRAYAGG(JSON_OBJECT('id', p.id, 'title', p.title)) as permissions",
+      ])
+      .groupBy('r.id')
+      .orderBy('r.isSystem', 'DESC');
+
+    // 如果有模糊检索条件
+    if (roleListDto.name) {
+      queryBuilder = queryBuilder
+        .where('r.name Like :name')
+        .setParameter('name', `%${roleListDto.name}%`);
+    }
+
+    if (roleListDto.pageSize && roleListDto.page) {
+      queryBuilder = queryBuilder.skip(skipCount).take(pageSize);
+    }
+
+    const roleData = await queryBuilder.getRawMany();
+
+    return {
+      list: roleData,
+    };
+  }
+
+  /** 更新角色信息 */
+  async update(updateRoleDto: UpdateRoleDto) {
+    // 1. 判断角色是否存在
+    const roleExist = await this.roleRepository.findOneBy({
+      id: updateRoleDto.id,
+    });
+    if (!roleExist) {
+      throw new HttpException(
+        '角色不存在或已删除',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 2. 更新角色表
+    const role = await this.roleRepository.save(
+      plainToClass(RoleEntity, updateRoleDto),
+    );
+    if (!role) {
+      throw new HttpException(
+        '更新失败，请稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    // 3. 更新角色权限表
+    if (updateRoleDto.permission) {
+      const { affected } = await this.rolePermissionRepository.delete({
+        roleId: updateRoleDto.id,
+      });
+      if (!affected) {
+        throw new HttpException(
+          '更新失败，请稍后重试',
+          HttpStatus.EXPECTATION_FAILED,
+        );
+      }
+
+      const rolePermission = updateRoleDto.permission.map((item) => {
+        return {
+          roleId: role.id,
+          permissionId: item,
+        };
+      });
+
+      const result = await this.rolePermissionRepository.save(rolePermission);
+      if (!result) {
+        throw new HttpException(
+          '更新失败，请稍后重试',
+          HttpStatus.EXPECTATION_FAILED,
+        );
+      }
+    }
+
+    return '更新成功';
+  }
+
+  async remove(id: number) {
+    const roleExist = await this.roleRepository.findOneBy({ id });
+    if (!roleExist) {
+      throw new HttpException(
+        '角色不存在或已删除',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+
+    if (roleExist.isSystem) {
+      throw new HttpException('系统角色不允许删除', HttpStatus.FORBIDDEN);
+    }
+
+    const { affected } = await this.roleRepository.delete({ id });
+    if (!affected) {
+      throw new HttpException(
+        '删除失败，清稍后重试',
+        HttpStatus.EXPECTATION_FAILED,
+      );
+    }
+    return '删除成功';
+  }
+}

@@ -9,5 +9,5 @@ export class CreateRoleDto {
   desc?: string;
 
   @IsArray({ message: '角色权限集合为 Array 类型' })
-  permission: number[];
+  permissions: number[];
 }
