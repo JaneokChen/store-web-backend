@@ -10,6 +10,7 @@ import { SysModule } from './sys/sys.module';
 import { PermissionModule } from './permission/permission.module';
 import { RoleModule } from './role/role.module';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
+import { ProductModule } from './product/product.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -18,6 +19,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     UserModule,
     SysModule,
     RoleModule,
+    ProductModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {

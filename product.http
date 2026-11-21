@@ -1,0 +1,61 @@
+
+@createdAt = {{$datetime iso8601}}
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoidGVzdDEiLCJ1c2VyVHlwZSI6IjEiLCJlbWFpbCI6ImphbmVva2NoZW5AMTYzLmNvbSIsImZyZWV6ZWQiOjAsImF2YXRhciI6IiIsImRlc2MiOiIiLCJjcmVhdGVUaW1lIjoiMjAyNi0xMS0yMFQxMTozNjoxOC44MDFaIiwiaWF0IjoxNzk1MTc1NzUzLCJleHAiOjE3OTU3ODA1NTN9.2yuCSsqstrBIbYangsWWSvkFhXYwlwP7_6tTcNXc4nQ
+
+###
+# 新建商品
+POST http://localhost:3332/api/product/create
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "name": "测试商品1",
+  "price": "10",
+  "desc": "测试商品1",
+  "status": 1
+}
+
+
+
+###
+# 查询商品列表
+GET http://localhost:3332/api/product/list?name=2&page=1&pageSize=10
+Content-Type: application/json
+Authorization: {{token}}
+
+
+###
+# 编辑商品
+PATCH http://localhost:3332/api/product/edit
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "id": 9,
+  "name": "商品1",
+  "price": "0",
+  "desc": "商品1",
+  "status": 2
+}
+
+
+###
+# 删除商品
+GET http://localhost:3332/api/product/delete/9
+Content-Type: application/json
+Authorization: {{token}}
+
+
+###
+# 更新商品状态
+PATCH http://localhost:3332/api/product/updateStatus
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "id": 3,
+  "status": 2
+}
+
+
+
