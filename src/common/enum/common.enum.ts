@@ -15,3 +15,12 @@ export enum PermissionType {
   // 按钮
   BUTTON = 3,
 }
+
+export enum ActivityStatus {
+  // 未开始
+  NOT_START = 0,
+  // 进行中
+  IN_PROGRESS = 1,
+  // 已结束
+  END = 2,
+}
