@@ -9,6 +9,7 @@ import { plainToClass } from 'class-transformer';
 import { OrderListDto } from './dto/order-list.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { UserEntity } from '@/user/entities/user.entities';
+import { HotSalesService } from '@/product/hot-sales.service';
 
 @Injectable()
 export class OrderService {
@@ -17,6 +18,9 @@ export class OrderService {
 
   @InjectRepository(ProductEntity)
   private productRepository: Repository<ProductEntity>;
+
+  @Inject(HotSalesService)
+  private hotSalesService: HotSalesService;
 
   /**
    * 创建订单
@@ -50,6 +54,8 @@ export class OrderService {
     if (!order) {
       throw new HttpException('开单失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    // 缓存销量到 Redis 做排行榜
+    await this.hotSalesService.addProductSales(String(productId), count);
 
     return '开单成功';
   }

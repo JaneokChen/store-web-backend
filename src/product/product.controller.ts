@@ -11,10 +11,14 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { ProductListDto } from './dto/product-list.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { HotSalesService } from './hot-sales.service';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly hotSalesService: HotSalesService,
+  ) {}
 
   @Post('create')
   create(@Body() createProductDto: CreateProductDto) {
@@ -42,5 +46,10 @@ export class ProductController {
       updateProductDto.id,
       updateProductDto.status,
     );
+  }
+
+  @Get('hot-list')
+  getHotSaleProductList(@Query() productListDto: ProductListDto) {
+    return this.hotSalesService.getTopNProducts(productListDto.topN);
   }
 }
