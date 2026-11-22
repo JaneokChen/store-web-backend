@@ -7,8 +7,8 @@ import { HotSalesService } from './hot-sales.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ProductEntity])],
-  controllers: [ProductController, HotSalesService],
-  providers: [ProductService],
+  controllers: [ProductController],
+  providers: [ProductService, HotSalesService],
   exports: [HotSalesService],
 })
 export class ProductModule {}
