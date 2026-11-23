@@ -1,6 +1,6 @@
 # 接口和Content-Type不能换行
 @createdAt = {{$datetime iso8601}}
-@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJuYW1lIjoidGVzdDEiLCJ1c2VyVHlwZSI6IjEiLCJlbWFpbCI6ImphbmVva2NoZW5AMTYzLmNvbSIsImZyZWV6ZWQiOjAsImF2YXRhciI6IiIsImRlc2MiOiIiLCJjcmVhdGVUaW1lIjoiMjAyNi0xMS0yMFQxMTozNjoxOC44MDFaIiwiaWF0IjoxNzk1MTc1NzUzLCJleHAiOjE3OTU3ODA1NTN9.2yuCSsqstrBIbYangsWWSvkFhXYwlwP7_6tTcNXc4nQ
+@token = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0ZXN0MSIsInVzZXJUeXBlIjoiMSIsImVtYWlsIjoiamFuZW9rY2hlbkAxNjMuY29tIiwiZnJlZXplZCI6MCwiYXZhdGFyIjoiIiwiZGVzYyI6IiIsImNyZWF0ZVRpbWUiOiIyMDI2LTExLTIyVDEzOjA1OjEzLjM4NloiLCJpYXQiOjE3OTUzNTI3NTAsImV4cCI6MTc5NTk1NzU1MH0.69XTy2f0SpE28dFwjA6xDSl_HbETMceUFcUxDniBTOQ
 # 发送注册邮箱验证码
 GET http://localhost:3332/api/sys/sendEmailForRegistry?email=janeokchen@163.com
 Authorization: {{token}}
@@ -17,7 +17,7 @@ Content-Type: application/json
   "password": "test1",
   "confirmPassword": "test1",
   "email": "janeokchen@163.com",
-  "code": 315758
+  "code": 515077
 }
 
 
@@ -28,7 +28,7 @@ Content-Type: application/json
 
 {
   "username": "test1",
-  "password": "testa"
+  "password": "test1"
 }
 
 ###
@@ -57,8 +57,8 @@ Authorization: {{token}}
 Content-Type: application/json
 
 {
-  "name": "管理员",
-  "desc": "我是管理员",
+  "name": "员工",
+  "desc": "我是员工",
   "permissions": [1,2,3]
 }
 
